@@ -1,0 +1,7 @@
+.env
+!.env.dist
+
+mariadb/*
+!mariadb/.gitkeep
+nextcloud/*
+!nextcloud/.gitkeep

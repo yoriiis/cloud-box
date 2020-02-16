@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+
+  nginx-proxy:
+    # Nginx-proxy version: v1.17.3
+    image: jwilder/nginx-proxy@sha256:7b33bdc57b0cb1bcfba4eb03b16387f12d4bbbd18bc7e1741566515c9aa288a3
+    container_name: cloud-nginx-proxy
+    restart: ${RESTART_MODE}
+    ports:
+      - 8000:80
+      - 18443:443
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+
+  mariadb:
+    # MariaDB version: v10.4.8
+    image: mariadb@sha256:a32daf0281803fd96e86daf6b0293b4d476cede1b5ce80b18452dfa1405360ff
+    container_name: cloud-mariadb
+    restart: ${RESTART_MODE}
+    environment:
+      - TZ=${TIME_ZONE}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+
+  nextcloud:
+    # NextCloud version: v17.0.0
+    image: nextcloud@sha256:41a066fc354eb65a3e8eedb8017bf745cb26690f65acaf40ee638bbff76c7dee
+    container_name: cloud-nextcloud
+    restart: ${RESTART_MODE}
+    expose:
+      - 80
+    environment:
+      - VIRTUAL_HOST=cloud.${HOST_NAME}
+      - TZ=${TIME_ZONE}
+    depends_on:
+      - mariadb
+    volumes:
+      - ./nextcloud:/var/www/html
